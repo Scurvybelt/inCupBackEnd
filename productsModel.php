@@ -2,7 +2,7 @@
 class productsModel{
     public $conexion;
     public function __construct(){
-        $this->conexion = new mysqli('localhost','root','','api');
+        $this->conexion = new mysqli('127.0.0.1','root','root','inCup');
         mysqli_set_charset($this->conexion,'utf8');
     }
 
@@ -17,11 +17,11 @@ class productsModel{
         return $products;
     }
 
-    public function saveProducts($name,$description,$price){
+    public function saveProducts($name,$description,$price,$amount,$img){
         $valida = $this->validateProducts($name,$description,$price);
         $resultado=['error','Ya existe un producto las mismas características'];
         if(count($valida)==0){
-            $sql="INSERT INTO products(name,description,price) VALUES('$name','$description','$price')";
+            $sql="INSERT INTO products(name,description,price,amount,img) VALUES('$name','$description','$price','$amount','$img')";
             mysqli_query($this->conexion,$sql);
             $resultado=['success','Producto guardado'];
         }
