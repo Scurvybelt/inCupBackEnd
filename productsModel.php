@@ -7,9 +7,24 @@ class productsModel{
     }
 
     public function getProducts($id=null){
-        $where = ($id == null) ? "" : " WHERE id='$id'";
+        $where = ($id == null) ? "" : " WHERE A.id='$id'";
         $products=[];
-        $sql="SELECT * FROM products ".$where;
+        // $sql="SELECT * FROM products ".$where;
+        $sql = "SELECT 
+        A.id,
+        A.name,
+        A.description,
+        FORMAT(A.price,2) as price,
+        A.amount,
+        A.img,
+        B.nombre as category,
+        C.nombre as tipo,
+        D.nombre as indice
+        From products A
+        JOIN category B ON B.id = A.category
+        JOIN tipo C ON C.id = A.tipo
+        JOIN indice D ON D.id = A.indice". $where;
+
         $registos = mysqli_query($this->conexion,$sql);
         while($row = mysqli_fetch_assoc($registos)){
             array_push($products,$row);

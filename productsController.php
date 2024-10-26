@@ -13,18 +13,44 @@ switch($_SERVER['REQUEST_METHOD']){
     break;
 
     case 'POST':
-        $_POST= json_decode(file_get_contents('php://input',true));
-        if(!isset($_POST->name) || is_null($_POST->name) || empty(trim($_POST->name)) || strlen($_POST->name) > 80){
-            $respuesta= ['error','El nombre del producto no debe estar vacío y no debe de tener más de 80 caracteres'];
-        }
-        else if(!isset($_POST->description) || is_null($_POST->description) || empty(trim($_POST->description)) || strlen($_POST->name) > 150){
-            $respuesta= ['error','La descripción del producto no debe estar vacía y no debe de tener más de 150 caracteres'];
-        }
-        else if(!isset($_POST->price) || is_null($_POST->price) || empty(trim($_POST->price)) || !is_numeric($_POST->price) || strlen($_POST->price) > 20){
-            $respuesta= ['error','El precio del producto no debe estar vacío, debe ser de tipo numérico y no tener más de 20 caracteres'];
-        }
-        else{
-            $respuesta = $productsModel->saveProducts($_POST->name,$_POST->description,$_POST->price,$_POST->amount,$_POST->img);
+        // Decodificar el cuerpo de la solicitud JSON
+        $_POST = json_decode(file_get_contents('php://input', true));
+    
+        // Validar los campos del producto
+        if (!isset($_POST->name) || is_null($_POST->name) || empty(trim($_POST->name)) || strlen($_POST->name) > 80) {
+            $respuesta = ['error', 'El nombre del producto no debe estar vacío y no debe de tener más de 80 caracteres'];
+        } else if (!isset($_POST->description) || is_null($_POST->description) || empty(trim($_POST->description)) || strlen($_POST->description) > 510) {
+            $respuesta = ['error', 'La descripción del producto no debe estar vacía y no debe de tener más de 510 caracteres'];
+        } else if (!isset($_POST->price) || is_null($_POST->price) || empty(trim($_POST->price)) || !is_numeric($_POST->price) || strlen($_POST->price) > 20) {
+            $respuesta = ['error', 'El precio del producto no debe estar vacío, debe ser de tipo numérico y no tener más de 20 caracteres'];
+        } else {
+            // var_dump($_FILES['img']);
+            // Manejar la carga de la imagenv
+
+            if (isset($_FILES['img']) && $_FILES['img']['error'] == UPLOAD_ERR_OK) {
+                $imgTmpPath = $_FILES['img']['tmp_name'];
+                $imgName = $_FILES['img']['name'];
+                $imgSize = $_FILES['img']['size'];
+                $imgType = $_FILES['img']['type'];
+                $imgExtension = pathinfo($imgName, PATHINFO_EXTENSION);
+                $allowedExtensions = ['jpg', 'jpeg', 'png', 'gif'];
+    
+                if (in_array($imgExtension, $allowedExtensions)) {
+                    $uploadDir = 'uploads/';
+                    $destPath = $uploadDir . $imgName;
+    
+                    if (move_uploaded_file($imgTmpPath, $destPath)) {
+                        // Guardar el producto en la base de datos
+                        $respuesta = $productsModel->saveProducts($_POST->name, $_POST->description, $_POST->price, $_POST->amount, $destPath);
+                    } else {
+                        $respuesta = ['error', 'Error al mover el archivo de imagen a la ubicación de destino'];
+                    }
+                } else {
+                    $respuesta = ['error', 'Tipo de archivo de imagen no permitido'];
+                }
+            } else {
+                $respuesta = ['error', 'Error al cargar la imagen'];
+            }
         }
         echo json_encode($respuesta);
     break;
