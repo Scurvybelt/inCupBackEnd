@@ -18,7 +18,10 @@ class productsModel{
         A.amount,
         A.img,
         B.nombre as category,
+        B.id as category_id,
+        C.id as tipo_id,
         C.nombre as tipo,
+        D.id as indice_id,
         D.nombre as indice
         From products A
         JOIN category B ON B.id = A.category
@@ -32,25 +35,25 @@ class productsModel{
         return $products;
     }
 
-    public function saveProducts($name,$description,$price,$amount,$img){
+    public function saveProducts($name,$description,$amount,$price,$category,$tipo,$indice,$urlImg){
         $valida = $this->validateProducts($name,$description,$price);
-        $resultado=['error','Ya existe un producto las mismas características'];
+        $resultado=['error','Ya existe un producto con las mismas características'];
         if(count($valida)==0){
-            $sql="INSERT INTO products(name,description,price,amount,img) VALUES('$name','$description','$price','$amount','$img')";
+            $sql="INSERT INTO products(name,description,price,amount,img,category,tipo,indice) VALUES('$name','$description','$price','$amount','$urlImg','$category','$tipo','$indice')";
             mysqli_query($this->conexion,$sql);
             $resultado=['success','Producto guardado'];
         }
         return $resultado;
     }
 
-    public function updateProducts($id,$name,$description,$price){
+    public function updateProducts($id,$name,$description,$amount,$price,$category,$tipo,$indice,$urlImg){
         $existe= $this->getProducts($id);
         $resultado=['error','No existe el producto con ID '.$id];
         if(count($existe)>0){
             $valida = $this->validateProducts($name,$description,$price);
             $resultado=['error','Ya existe un producto las mismas características'];
             if(count($valida)==0){
-                $sql="UPDATE products SET name='$name',description='$description',price='$price' WHERE id='$id' ";
+                $sql="UPDATE products SET name='$name',description='$description',amount='$amount',price='$price',category='$category',tipo='$tipo',indice='$indice',img='$urlImg' WHERE id='$id' ";
                 mysqli_query($this->conexion,$sql);
                 $resultado=['success','Producto actualizado'];
             }
@@ -76,6 +79,20 @@ class productsModel{
         while($row = mysqli_fetch_assoc($registos)){
             array_push($products,$row);
         }
+        return $products;
+    }
+
+    public function getCatalog($catalog){
+        
+        $products=[];
+        $sql = "SELECT * FROM " . $catalog;
+        $registos = mysqli_query($this->conexion,$sql);
+        
+        while($row = mysqli_fetch_assoc($registos)){
+            array_push($products,$row);
+            // var_dump($row);
+        }
+        
         return $products;
     }
 }
