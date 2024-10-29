@@ -6,58 +6,72 @@ header("Allow: GET, POST, OPTIONS, PUT, DELETE");
 header('content-type: application/json; charset=utf-8');
 require 'productsModel.php';
 $productsModel= new productsModel();
+
+$requestUri = $_SERVER['REQUEST_URI'];
 switch($_SERVER['REQUEST_METHOD']){
+    
     case 'GET':
-        // var_dump($_GET['catalogo']);
         if(isset($_GET['catalogo'])){
             $respuesta = $productsModel->getCatalog($_GET['catalogo']);
         }else{
             $respuesta = (!isset($_GET['id'])) ? $productsModel->getProducts() : $productsModel->getProducts($_GET['id']);  
         }
+        
+        // var_dump($_GET['catalogo']);
+        
         echo json_encode($respuesta);
     break;
 
     case 'POST':
 
+
         // Decodificar el cuerpo de la solicitud JSON
         $_POST = json_decode(file_get_contents('php://input', true));
-    
-        // Validar los campos del producto
-        if (!isset($_POST->name) || is_null($_POST->name) || empty(trim($_POST->name)) || strlen($_POST->name) > 80) {
-            $respuesta = ['error', 'El nombre del producto no debe estar vacío y no debe de tener más de 80 caracteres'];
-        } else if (!isset($_POST->description) || is_null($_POST->description) || empty(trim($_POST->description)) || strlen($_POST->description) > 510) {
-            $respuesta = ['error', 'La descripción del producto no debe estar vacía y no debe de tener más de 510 caracteres'];
-        } else if (!isset($_POST->price) || is_null($_POST->price) || empty(trim($_POST->price)) || !is_numeric($_POST->price) || strlen($_POST->price) > 20) {
-            $respuesta = ['error', 'El precio del producto no debe estar vacío, debe ser de tipo numérico y no tener más de 20 caracteres'];
-        } else {
-            // Manejar la imagen base64
-            if (isset($_POST->img)) {
-                $imgData = $_POST->img;
-                $imgData = str_replace('data:image/png;base64,', '', $imgData);
-                $imgData = str_replace('data:image/jpeg;base64,', '', $imgData);
-                $imgData = str_replace(' ', '+', $imgData);
-                $imgDecoded = base64_decode($imgData);
 
-                // Generar un nombre único para la imagen
-                $imgName = uniqid() . '.png';
-                $uploadDir = 'uploads/';
-                $destPath = $uploadDir . $imgName;
+        if(strpos($requestUri, 'login') !== false){
+            // var_dump('Entro Usre');
+            // var_dump($_POST->usuario);
+            // var_dump($_POST->password);
 
-                // var_dump ($destPath);
-                
-                if (file_put_contents($destPath, $imgDecoded)) {
-                    // Guardar el producto en la base de datos
-                    $urlLocal = 'http://api-products.test/'.$destPath;
-                    $respuesta = $productsModel->saveProducts($_POST->name, $_POST->description, $_POST->amount, $_POST->price,$_POST->category,$_POST->tipo,$_POST->indice,$urlLocal);
-                } else {
-                    $respuesta = ['error', 'Error al guardar la imagen decodificada'];
-                }
+            $respuesta = $productsModel->getUser($_POST->usuario, $_POST->password);
+        }else{
+            if (!isset($_POST->name) || is_null($_POST->name) || empty(trim($_POST->name)) || strlen($_POST->name) > 80) {
+                $respuesta = ['error', 'El nombre del producto no debe estar vacío y no debe de tener más de 80 caracteres'];
+            } else if (!isset($_POST->description) || is_null($_POST->description) || empty(trim($_POST->description)) || strlen($_POST->description) > 510) {
+                $respuesta = ['error', 'La descripción del producto no debe estar vacía y no debe de tener más de 510 caracteres'];
+            } else if (!isset($_POST->price) || is_null($_POST->price) || empty(trim($_POST->price)) || !is_numeric($_POST->price) || strlen($_POST->price) > 20) {
+                $respuesta = ['error', 'El precio del producto no debe estar vacío, debe ser de tipo numérico y no tener más de 20 caracteres'];
             } else {
-                // Guardar el producto sin imagen
-                $respuesta = ['error', 'En la imagen'];
-                // $respuesta = $productsModel->saveProducts($data['name'], $data['description'], $data['price'], $data['amount'], null);
+                // Manejar la imagen base64
+                if (isset($_POST->img)) {
+                    $imgData = $_POST->img;
+                    $imgData = str_replace('data:image/png;base64,', '', $imgData);
+                    $imgData = str_replace('data:image/jpeg;base64,', '', $imgData);
+                    $imgData = str_replace(' ', '+', $imgData);
+                    $imgDecoded = base64_decode($imgData);
+    
+                    // Generar un nombre único para la imagen
+                    $imgName = uniqid() . '.png';
+                    $uploadDir = 'uploads/';
+                    $destPath = $uploadDir . $imgName;
+    
+                    // var_dump ($destPath);
+                    
+                    if (file_put_contents($destPath, $imgDecoded)) {
+                        // Guardar el producto en la base de datos
+                        $urlLocal = 'http://api-products.test/'.$destPath;
+                        $respuesta = $productsModel->saveProducts($_POST->name, $_POST->description, $_POST->amount, $_POST->price,$_POST->category,$_POST->tipo,$_POST->indice,$urlLocal);
+                    } else {
+                        $respuesta = ['error', 'Error al guardar la imagen decodificada'];
+                    }
+                } else {
+                    // Guardar el producto sin imagen
+                    $respuesta = ['error', 'En la imagen'];
+                    // $respuesta = $productsModel->saveProducts($data['name'], $data['description'], $data['price'], $data['amount'], null);
+                }
             }
         }
+        // Validar los campos del producto
         echo json_encode($respuesta);
     break;
 

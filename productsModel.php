@@ -45,19 +45,19 @@ class productsModel{
         }
         return $resultado;
     }
-
+    //checar esto 
     public function updateProducts($id,$name,$description,$amount,$price,$category,$tipo,$indice,$urlImg){
-        $existe= $this->getProducts($id);
-        $resultado=['error','No existe el producto con ID '.$id];
-        if(count($existe)>0){
-            $valida = $this->validateProducts($name,$description,$price);
-            $resultado=['error','Ya existe un producto las mismas características'];
-            if(count($valida)==0){
+        // $existe= $this->getProducts($id);
+        // $resultado=['error','No existe el producto con ID '.$id];
+        // if(count($existe)>0){
+        //     $valida = $this->validateProducts($name,$description,$price);
+        //     $resultado=['error','Ya existe un producto las mismas características'];
+        //     if(count($valida)==0){
                 $sql="UPDATE products SET name='$name',description='$description',amount='$amount',price='$price',category='$category',tipo='$tipo',indice='$indice',img='$urlImg' WHERE id='$id' ";
                 mysqli_query($this->conexion,$sql);
                 $resultado=['success','Producto actualizado'];
-            }
-        }
+        //     }
+        // }
         return $resultado;
     }
     
@@ -93,6 +93,21 @@ class productsModel{
             // var_dump($row);
         }
         
+        return $products;
+    }
+
+    //Users
+    public function getUser($user, $password){
+        $products=[];
+        $sql = "SELECT * FROM usuarios where usuario='$user' and password='$password'";
+        $registros = mysqli_query($this->conexion,$sql);
+
+        while($row = mysqli_fetch_assoc($registros)){
+            array_push($products,$row);
+        }
+        if(empty($products)){
+            return ['error','Usuario o contraseña incorrectos'];
+        }
         return $products;
     }
 }
