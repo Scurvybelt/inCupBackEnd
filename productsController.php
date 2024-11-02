@@ -29,46 +29,30 @@ switch($_SERVER['REQUEST_METHOD']){
         $_POST = json_decode(file_get_contents('php://input', true));
 
         if(strpos($requestUri, 'login') !== false){
-            // var_dump('Entro Usre');
-            // var_dump($_POST->usuario);
-            // var_dump($_POST->password);
-
             $respuesta = $productsModel->getUser($_POST->usuario, $_POST->password);
-        }else{
-            if (!isset($_POST->name) || is_null($_POST->name) || empty(trim($_POST->name)) || strlen($_POST->name) > 80) {
-                $respuesta = ['error', 'El nombre del producto no debe estar vacío y no debe de tener más de 80 caracteres'];
-            } else if (!isset($_POST->description) || is_null($_POST->description) || empty(trim($_POST->description)) || strlen($_POST->description) > 510) {
-                $respuesta = ['error', 'La descripción del producto no debe estar vacía y no debe de tener más de 510 caracteres'];
-            } else if (!isset($_POST->price) || is_null($_POST->price) || empty(trim($_POST->price)) || !is_numeric($_POST->price) || strlen($_POST->price) > 20) {
-                $respuesta = ['error', 'El precio del producto no debe estar vacío, debe ser de tipo numérico y no tener más de 20 caracteres'];
-            } else {
-                // Manejar la imagen base64
-                if (isset($_POST->img)) {
-                    $imgData = $_POST->img;
-                    $imgData = str_replace('data:image/png;base64,', '', $imgData);
-                    $imgData = str_replace('data:image/jpeg;base64,', '', $imgData);
-                    $imgData = str_replace(' ', '+', $imgData);
-                    $imgDecoded = base64_decode($imgData);
-    
-                    // Generar un nombre único para la imagen
-                    $imgName = uniqid() . '.png';
-                    $uploadDir = 'uploads/';
-                    $destPath = $uploadDir . $imgName;
-    
-                    // var_dump ($destPath);
-                    
-                    if (file_put_contents($destPath, $imgDecoded)) {
-                        // Guardar el producto en la base de datos
-                        $urlLocal = 'http://api-products.test/'.$destPath;
-                        $respuesta = $productsModel->saveProducts($_POST->name, $_POST->description, $_POST->amount, $_POST->price,$_POST->category,$_POST->tipo,$_POST->indice,$urlLocal);
-                    } else {
-                        $respuesta = ['error', 'Error al guardar la imagen decodificada'];
-                    }
+        }else if(strpos($requestUri,'email') !== false){
+            // var_dump('Entro');
+            // var_dump($requestUri);
+            $respuesta = $productsModel->sendEmail($_POST->asunto,$_POST->email,$_POST->message,$_POST->name,$_POST->tel);
+        }else if(!isset($_POST->name) || is_null($_POST->name) || empty(trim($_POST->name)) || strlen($_POST->name) > 80) {
+            $respuesta = ['error', 'El nombre del producto no debe estar vacío y no debe de tener más de 80 caracteres'];
+        } else if (!isset($_POST->description) || is_null($_POST->description) || empty(trim($_POST->description)) || strlen($_POST->description) > 510) {
+            $respuesta = ['error', 'La descripción del producto no debe estar vacía y no debe de tener más de 510 caracteres'];
+        } else if (!isset($_POST->price) || is_null($_POST->price) || empty(trim($_POST->price)) || !is_numeric($_POST->price) || strlen($_POST->price) > 20) {
+            $respuesta = ['error', 'El precio del producto no debe estar vacío, debe ser de tipo numérico y no tener más de 20 caracteres'];
+        } else {
+            if (isset($_POST->img)) {
+                $urlLocal = $productsModel->saveBase64Image($_POST->img);
+                if ($urlLocal) {
+                    // Guardar el producto en la base de datos
+                    $respuesta = $productsModel->saveProducts($_POST->name, $_POST->description, $_POST->amount, $_POST->price, $_POST->category, $_POST->tipo, $_POST->indice, $urlLocal);
                 } else {
-                    // Guardar el producto sin imagen
-                    $respuesta = ['error', 'En la imagen'];
-                    // $respuesta = $productsModel->saveProducts($data['name'], $data['description'], $data['price'], $data['amount'], null);
+                    $respuesta = ['error', 'Error al guardar la imagen decodificada'];
                 }
+            } else {
+                // Guardar el producto sin imagen
+                $respuesta = ['error', 'En la imagen'];
+                // $respuesta = $productsModel->saveProducts($data['name'], $data['description'], $data['price'], $data['amount'], null);
             }
         }
         // Validar los campos del producto
@@ -89,10 +73,32 @@ switch($_SERVER['REQUEST_METHOD']){
         }
         else if(!isset($_PUT->price) || is_null($_PUT->price) || empty(trim($_PUT->price)) || !is_numeric($_PUT->price) || strlen($_PUT->price) > 20){
             $respuesta= ['error','El precio del producto no debe estar vacío , debe ser de tipo numérico y no tener más de 20 caracteres'];
-        }
-        else{
+        }else{
             
-            $respuesta = $productsModel->updateProducts($_PUT->id,$_PUT->name, $_PUT->description, $_PUT->amount, $_PUT->price,$_PUT->category,$_PUT->tipo,$_PUT->indice,$_PUT->img);
+            if($productsModel->isBase64Image($_PUT->img)){
+
+                $productoActual = $productsModel->getProducts($_PUT->id);
+                if($productoActual){
+                    //Eliminar la imagen anterior
+                    $imagenAnterior = $productoActual[0]['img'];
+                    $nombreImagenAnterior = basename($imagenAnterior);
+                    $rutaImagenAnterior = 'uploads/' . $nombreImagenAnterior;
+                    if (file_exists($rutaImagenAnterior)) {
+                        unlink($rutaImagenAnterior);
+                    
+                    }
+                }
+                //Es una imagen nueva
+                $urlLocal = $productsModel->saveBase64Image($_PUT->img);
+                if($urlLocal){
+                    $respuesta = $productsModel->updateProducts($_PUT->id,$_PUT->name, $_PUT->description, $_PUT->amount, $_PUT->price,$_PUT->category,$_PUT->tipo,$_PUT->indice,$urlLocal);
+                }else{
+
+                }
+            }else{
+                $respuesta = $productsModel->updateProducts($_PUT->id,$_PUT->name, $_PUT->description, $_PUT->amount, $_PUT->price,$_PUT->category,$_PUT->tipo,$_PUT->indice,$_PUT->img);
+
+            }
 
         }
         echo json_encode($respuesta);
@@ -104,8 +110,27 @@ switch($_SERVER['REQUEST_METHOD']){
             $respuesta= ['error','El ID del producto no debe estar vacío'];
         }
         else{
+            $productoActual = $productsModel->getProducts($_DELETE->id);
+            if($productoActual){
+                //Eliminar la imagen anterior
+                $imagenAnterior = $productoActual[0]['img'];
+                $nombreImagenAnterior = basename($imagenAnterior);
+                $rutaImagenAnterior = 'uploads/' . $nombreImagenAnterior;
+                if (file_exists($rutaImagenAnterior)) {
+                    unlink($rutaImagenAnterior);
+                
+                }
+            }
             $respuesta = $productsModel->deleteProducts($_DELETE->id);
+
+            
+
         }
         echo json_encode($respuesta);
     break;
 }
+
+
+
+
+
