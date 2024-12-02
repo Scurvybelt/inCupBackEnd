@@ -22,7 +22,6 @@ class productsModel{
         A.id,
         A.name,
         A.description,
-        A.price,
         A.amount,
         A.img,
         B.nombre as category,
@@ -43,8 +42,8 @@ class productsModel{
         return $products;
     }
 
-    public function saveProducts($name,$description,$amount,$price,$category,$tipo,$indice,$urlImg){
-        $valida = $this->validateProducts($name,$description,$price);
+    public function saveProducts($name,$description,$amount,$category,$tipo,$indice,$urlImg){
+        $valida = $this->validateProducts($name,$description);
         $resultado=['error','Ya existe un producto con las mismas características'];
         if(count($valida)==0){
             $sql="INSERT INTO products(name,description,price,amount,img,category,tipo,indice) VALUES('$name','$description','$price','$amount','$urlImg','$category','$tipo','$indice')";
@@ -54,14 +53,14 @@ class productsModel{
         return $resultado;
     }
     //checar esto 
-    public function updateProducts($id,$name,$description,$amount,$price,$category,$tipo,$indice,$urlImg){
+    public function updateProducts($id,$name,$description,$amount,$category,$tipo,$indice,$urlImg){
         // $existe= $this->getProducts($id);
         // $resultado=['error','No existe el producto con ID '.$id];
         // if(count($existe)>0){
         //     $valida = $this->validateProducts($name,$description,$price);
         //     $resultado=['error','Ya existe un producto las mismas características'];
         //     if(count($valida)==0){
-                $sql="UPDATE products SET name='$name',description='$description',amount='$amount',price='$price',category='$category',tipo='$tipo',indice='$indice',img='$urlImg' WHERE id='$id' ";
+                $sql="UPDATE products SET name='$name',description='$description',amount='$amount',category='$category',tipo='$tipo',indice='$indice',img='$urlImg' WHERE id='$id' ";
                 mysqli_query($this->conexion,$sql);
                 $resultado=['success','Producto actualizado'];
         //     }
@@ -80,9 +79,9 @@ class productsModel{
         return $resultado;
     }
     
-    public function validateProducts($name,$description,$price){
+    public function validateProducts($name,$description){
         $products=[];
-        $sql="SELECT * FROM products WHERE name='$name' AND description='$description' AND price='$price' ";
+        $sql="SELECT * FROM products WHERE name='$name' AND description='$description'";
         $registos = mysqli_query($this->conexion,$sql);
         while($row = mysqli_fetch_assoc($registos)){
             array_push($products,$row);

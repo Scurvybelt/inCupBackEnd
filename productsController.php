@@ -38,14 +38,12 @@ switch($_SERVER['REQUEST_METHOD']){
             $respuesta = ['error', 'El nombre del producto no debe estar vacío y no debe de tener más de 80 caracteres'];
         } else if (!isset($_POST->description) || is_null($_POST->description) || empty(trim($_POST->description)) || strlen($_POST->description) > 510) {
             $respuesta = ['error', 'La descripción del producto no debe estar vacía y no debe de tener más de 510 caracteres'];
-        } else if (!isset($_POST->price) || is_null($_POST->price) || empty(trim($_POST->price)) || !is_numeric($_POST->price) || strlen($_POST->price) > 20) {
-            $respuesta = ['error', 'El precio del producto no debe estar vacío, debe ser de tipo numérico y no tener más de 20 caracteres'];
         } else {
             if (isset($_POST->img)) {
                 $urlLocal = $productsModel->saveBase64Image($_POST->img);
                 if ($urlLocal) {
                     // Guardar el producto en la base de datos
-                    $respuesta = $productsModel->saveProducts($_POST->name, $_POST->description, $_POST->amount, $_POST->price, $_POST->category, $_POST->tipo, $_POST->indice, $urlLocal);
+                    $respuesta = $productsModel->saveProducts($_POST->name, $_POST->description, $_POST->amount, $_POST->category, $_POST->tipo, $_POST->indice, $urlLocal);
                 } else {
                     $respuesta = ['error', 'Error al guardar la imagen decodificada'];
                 }
@@ -70,9 +68,6 @@ switch($_SERVER['REQUEST_METHOD']){
         }
         else if(!isset($_PUT->description) || is_null($_PUT->description) || empty(trim($_PUT->description)) || strlen($_PUT->description) > 150){
             $respuesta= ['error','La descripción del producto no debe estar vacía y no debe de tener más de 150 caracteres'];
-        }
-        else if(!isset($_PUT->price) || is_null($_PUT->price) || empty(trim($_PUT->price)) || !is_numeric($_PUT->price) || strlen($_PUT->price) > 20){
-            $respuesta= ['error','El precio del producto no debe estar vacío , debe ser de tipo numérico y no tener más de 20 caracteres'];
         }else{
             
             if($productsModel->isBase64Image($_PUT->img)){
@@ -91,12 +86,12 @@ switch($_SERVER['REQUEST_METHOD']){
                 //Es una imagen nueva
                 $urlLocal = $productsModel->saveBase64Image($_PUT->img);
                 if($urlLocal){
-                    $respuesta = $productsModel->updateProducts($_PUT->id,$_PUT->name, $_PUT->description, $_PUT->amount, $_PUT->price,$_PUT->category,$_PUT->tipo,$_PUT->indice,$urlLocal);
+                    $respuesta = $productsModel->updateProducts($_PUT->id,$_PUT->name, $_PUT->description, $_PUT->amount,$_PUT->category,$_PUT->tipo,$_PUT->indice,$urlLocal);
                 }else{
 
                 }
             }else{
-                $respuesta = $productsModel->updateProducts($_PUT->id,$_PUT->name, $_PUT->description, $_PUT->amount, $_PUT->price,$_PUT->category,$_PUT->tipo,$_PUT->indice,$_PUT->img);
+                $respuesta = $productsModel->updateProducts($_PUT->id,$_PUT->name, $_PUT->description, $_PUT->amount,$_PUT->category,$_PUT->tipo,$_PUT->indice,$_PUT->img);
 
             }
 
