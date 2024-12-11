@@ -46,7 +46,7 @@ class productsModel{
         $valida = $this->validateProducts($name,$description);
         $resultado=['error','Ya existe un producto con las mismas características'];
         if(count($valida)==0){
-            $sql="INSERT INTO products(name,description,price,amount,img,category,tipo,indice) VALUES('$name','$description','$price','$amount','$urlImg','$category','$tipo','$indice')";
+            $sql="INSERT INTO products(name,description,amount,img,category,tipo,indice) VALUES('$name','$description','$amount','$urlImg','$category','$tipo','$indice')";
             mysqli_query($this->conexion,$sql);
             $resultado=['success','Producto guardado'];
         }
@@ -168,16 +168,16 @@ class productsModel{
             //Server settings
             // $mail->SMTPDebug = SMTP::DEBUG_SERVER;                      //Enable verbose debug output
             $mail->isSMTP();                                            //Send using SMTP
-            $mail->Host       = 'smtp.gmail.com';                     //Set the SMTP server to send through
+            $mail->Host       ='mail.incup.com.mx';                     //Set the SMTP server to send through
             $mail->SMTPAuth   = true;                                   //Enable SMTP authentication
-            $mail->Username   = 'eduardoavilat2002@gmail.com';                     //SMTP username
-            $mail->Password   = 'fyohvokyieibtuwm';                         //SMTP password
-            $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;         // ENCRYPTION_SMTPS 464 Enable implicit TLS encryption
-            $mail->Port       = 587;                                    //TCP port to connect to; use 587 if you have set `SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS`
+            $mail->Username   = 'ventas@incup.com.mx';                     //SMTP username
+            $mail->Password   = 'VentasInCup2025';                         //SMTP password
+            $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS;         // ENCRYPTION_SMTPS 464 Enable implicit TLS encryption
+            $mail->Port       = 465;                                    //TCP port to connect to; use 587 if you have set `SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS`
 
             //Recipients
-            $mail->setFrom('eduardoavilat2002@gmail.com', 'Equipo Ti Aixa'); //quien lo manda
-            $mail->addAddress('eduardoavilat2002@gmail.com', 'Eduardo');     //Add a recipient quien lo recibe
+            $mail->setFrom('ventas@incup.com.mx', 'Formulario Pagina Web'); //quien lo manda
+            $mail->addAddress('ventas@incup.com.mx', 'Formulario Pagina Web');     //Add a recipient quien lo recibe
 
         
             //Content
